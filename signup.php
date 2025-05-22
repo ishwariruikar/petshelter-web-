@@ -1,36 +1,37 @@
-
 <?php
+// Database connection details
 $servername = "localhost";
-$username = "root";
-$password = "";
+$username = "root";        // Change this if needed
+$password = "";            // Change this if needed
 $dbname = "petshelter";
 
+// Create connection
 $conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check connection
 if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+  die("Connection failed: " . $conn->connect_error);
 }
 
+// Get POST data from form
 $name = $_POST['name'];
 $email = $_POST['email'];
 $password = $_POST['password'];
+$pet = $_POST['pet'];
 
-$sql_check = "SELECT * FROM users WHERE email = ?";
-$stmt_check = $conn->prepare($sql_check);
-$stmt_check->bind_param("s", $email);
-$stmt_check->execute();
-$result = $stmt_check->get_result();
+// Hash the password for security
+$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-if ($result->num_rows > 0) {
-    echo "<script>alert('User already exists! Please login.'); window.location.href = 'login.html';</script>";
+// Insert data into database
+$sql = "INSERT INTO users (name, email, password, pet) 
+        VALUES ('$name', '$email', '$hashedPassword', '$pet')";
+
+if ($conn->query($sql) === TRUE) {
+  echo "<h2 style='text-align:center; font-family:sans-serif;'>🎉 Thank you, $name!<br>Your account has been created.</h2>";
+  echo "<p style='text-align:center;'><a href='login.html'>Click here to login</a></p>";
 } else {
-    $sql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sss", $name, $email, $password);
-    if ($stmt->execute()) {
-        echo "<script>alert('Signup successful! Please login.'); window.location.href = 'login.html';</script>";
-    } else {
-        echo "Error: " . $stmt->error;
-    }
+  echo "Error: " . $sql . "<br>" . $conn->error;
 }
+
 $conn->close();
 ?>
